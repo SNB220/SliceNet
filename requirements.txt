@@ -1,0 +1,15 @@
+# SliceNet - IP Subnet Calculator
+# No external dependencies required
+# Python 3.7+ standard library is sufficient
+
+# All required modules are part of Python's standard library:
+# - sys (command-line arguments)
+# - re (regular expressions for IP validation)
+# - json (JSON export format)
+# - csv (CSV export format)
+# - os (file system operations)
+# - datetime (timestamped filenames)
+# - typing (type hints)
+
+# Minimum Python Version: 3.7+
+# Recommended Python Version: 3.8+
