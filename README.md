@@ -66,7 +66,6 @@ SliceNet/
 └── ARCHIVE/             # Old documentation
 ```
 
-See **[DIRECTORY_STRUCTURE.md](DIRECTORY_STRUCTURE.md)** for complete file organization.
 
 ## Basic Usage
 
@@ -106,12 +105,6 @@ Usable Hosts: 254
 Next Network: 192.168.2.0
 ==================================================
 ```
-
-## Documentation
-
-📘 **[FEATURES.md](docs/FEATURES.md)** - Complete feature reference (all 12 features)  
-📗 **[GUIDE.md](docs/GUIDE.md)** - Examples, tutorials, and real-world scenarios  
-📦 **[EXPORT_BATCH_DEMO.md](docs/EXPORT_BATCH_DEMO.md)** - Export & batch processing guide  
 
 **All saved files go to:** `exports/` folder (auto-created)
 
@@ -200,20 +193,8 @@ python test_slicenet.py
 **SNB**  
 GitHub: [@SNB220](https://github.com/SNB220)
 
-## Contributing
-
-Contributions welcome! Please test your changes with `test_slicenet.py`.
-
-Found a bug or have a feature request? [Open an issue](https://github.com/SNB220/slicenet/issues)
-
-## License
-
-MIT License - feel free to use this tool in your projects!
 
 ## Support
 
 ⭐ **Star this project** on [GitHub](https://github.com/SNB220) if you find it useful!
 
----
-
-**Need Help?** See [GUIDE.md](docs/GUIDE.md) for detailed examples and tutorials!
