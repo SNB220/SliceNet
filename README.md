@@ -58,12 +58,8 @@ python slicenet.py --help
 SliceNet/
 ├── slicenet.py          # Main calculator
 ├── README.md            # This file
-├── docs/                # 📚 All documentation
-│   ├── FEATURES.md     # Complete feature reference
-│   ├── GUIDE.md        # Examples & tutorials
-│   └── ...             # More guides
 ├── exports/             # 💾 Your saved results (auto-created)
-└── ARCHIVE/             # Old documentation
+
 ```
 
 
