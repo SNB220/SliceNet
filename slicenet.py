@@ -2412,6 +2412,10 @@ def main():
             analyzer = IPAnalyzer(ip_address)
             output = analyzer.analyze()
             print(output)
+            
+            # Prompt to save
+            analysis_type = "ipv6_analysis" if ipv6 else "ipv4_analysis"
+            ExportManager.prompt_save(output, analysis_type)
             return
         
         if ipv6:
