@@ -6,13 +6,11 @@ A powerful, professional Python-based CLI tool for network calculations, support
 
 **Author:** SNB | **GitHub:** [SNB220](https://github.com/SNB220) | **Version:** 1.0.0
 
-## ✨ What's New
 
-🚀 **Interactive Mode** - Run `python slicenet.py` for continuous command prompt  
-🎨 **Stylish CLI Banner** - Eye-catching ASCII art welcome screen  
-🔍 **IP Analysis Mode** - Just enter an IP (no mask needed) for quick info  
-📝 **Smart Error Messages** - Helpful suggestions and examples for every error  
-💾 **Auto-Export Folder** - Saves files to `exports/` (auto-created)  
+**Interactive Mode** - Run `python slicenet.py` for continuous command prompt   
+**IP Analysis Mode** - Just enter an IP (no mask needed) for quick info  
+**Smart Error Messages** - Helpful suggestions and examples for every error  
+**Auto-Export Folder** - Saves files to `exports/` (auto-created)  
 
 ## Quick Start
 
@@ -83,7 +81,7 @@ python slicenet.py --help
 SliceNet/
 ├── slicenet.py          # Main calculator
 ├── README.md            # This file
-├── exports/             # 💾 Your saved results (auto-created)
+├── exports/             # Your saved results (auto-created)
 
 ```
 
@@ -322,19 +320,19 @@ python test_slicenet.py
 
 ## What Makes SliceNet Special?
 
-🎨 **Beautiful Interface**
+**Beautiful Interface**
 - Stylish ASCII art banner
 - Interactive mode with continuous prompts
 - Clean, professional output formatting
 - Color-coded information (when terminal supports it)
 
-🧠 **Intelligent Features**
+**Intelligent Features**
 - **Interactive Mode**: Run once, enter multiple commands without retyping
 - **IP Analysis Mode**: Just type an IP - no subnet mask required!
 - **Smart Error Messages**: Every error includes why it failed, helpful suggestions, and examples
 - **Auto-Export Folder**: Saves organized results automatically
 
-💪 **Powerful Yet Simple**
+**Powerful Yet Simple**
 - Zero dependencies - just Python 3.7+
 - Works immediately - no installation or setup
 - Comprehensive help system with examples
@@ -355,9 +353,6 @@ GitHub: [@SNB220](https://github.com/SNB220)
 ## Support
 
 ⭐ **Star this project** on [GitHub](https://github.com/SNB220/SliceNet) if you find it useful!
-
-🐛 **Found a bug?** Open an issue on GitHub  
-💡 **Have a suggestion?** Contributions are welcome!
 
 ---
 
