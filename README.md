@@ -8,6 +8,7 @@ A powerful, professional Python-based CLI tool for network calculations, support
 
 ## ✨ What's New
 
+🚀 **Interactive Mode** - Run `python slicenet.py` for continuous command prompt  
 🎨 **Stylish CLI Banner** - Eye-catching ASCII art welcome screen  
 🔍 **IP Analysis Mode** - Just enter an IP (no mask needed) for quick info  
 📝 **Smart Error Messages** - Helpful suggestions and examples for every error  
@@ -16,6 +17,11 @@ A powerful, professional Python-based CLI tool for network calculations, support
 ## Quick Start
 
 ```bash
+# Interactive mode - No need to type "python slicenet.py" repeatedly!
+python slicenet.py
+# Then enter commands like: 192.168.1.100/24
+# Type 'exit' when done
+
 # Show stylish help menu
 python slicenet.py --help
 
@@ -43,8 +49,9 @@ python slicenet.py --batch ips.txt json
 
 ## Key Features
 
+✅ **Interactive Mode** - Continuous command prompt for easier workflows  
 ✅ **IPv4 & IPv6 Support** - Full support for both protocols  
-✅ **13 Powerful Features** - From basic calculation to batch processing  
+✅ **14 Powerful Features** - From basic calculation to batch processing  
 ✅ **IP Analysis Mode** - Quick lookup without subnet mask  
 ✅ **Range to CIDR** - Convert IP ranges to optimal CIDR notation(s)  
 ✅ **Supernet/CIDR Aggregation** - Combine multiple networks into summary route  
@@ -82,6 +89,25 @@ SliceNet/
 
 
 ## Basic Usage
+
+### Interactive Mode (Recommended!)
+
+The easiest way to use SliceNet - no need to retype `python slicenet.py` every time:
+
+```bash
+# Start interactive mode
+python slicenet.py
+
+# Now enter commands directly at the SliceNet> prompt:
+SliceNet> 192.168.1.0/24
+SliceNet> 10.0.0.50
+SliceNet> 2001:db8::1/64
+SliceNet> --range 192.168.1.10 192.168.1.50
+SliceNet> help
+SliceNet> exit
+```
+
+### Command-Line Mode
 
 ```bash
 # Quick IP analysis (no subnet mask needed!)
@@ -298,10 +324,12 @@ python test_slicenet.py
 
 🎨 **Beautiful Interface**
 - Stylish ASCII art banner
+- Interactive mode with continuous prompts
 - Clean, professional output formatting
 - Color-coded information (when terminal supports it)
 
 🧠 **Intelligent Features**
+- **Interactive Mode**: Run once, enter multiple commands without retyping
 - **IP Analysis Mode**: Just type an IP - no subnet mask required!
 - **Smart Error Messages**: Every error includes why it failed, helpful suggestions, and examples
 - **Auto-Export Folder**: Saves organized results automatically
@@ -313,7 +341,7 @@ python test_slicenet.py
 - Production-ready code with extensive testing
 
 🌐 **Complete Network Toolkit**
-- 13 features covering all common networking tasks
+- 14 features covering all common networking tasks
 - IPv4 and IPv6 full support
 - From simple lookups to complex batch processing
 - Export to multiple formats (TXT, CSV, JSON)

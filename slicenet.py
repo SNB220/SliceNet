@@ -2312,6 +2312,175 @@ def print_banner():
     print(banner)
 
 
+def interactive_mode():
+    """Run SliceNet in interactive mode."""
+    print("\n💡 Interactive Mode - Enter your queries below")
+    print("   Type 'help' for usage, 'exit' or 'quit' to leave\n")
+    
+    while True:
+        try:
+            # Prompt for input
+            user_input = input("SliceNet> ").strip()
+            
+            # Check for empty input
+            if not user_input:
+                continue
+            
+            # Check for exit commands
+            if user_input.lower() in ['exit', 'quit', 'q']:
+                print("\n👋 Thanks for using SliceNet! Goodbye.\n")
+                break
+            
+            # Check for help
+            if user_input.lower() in ['help', '--help', '-h', '?']:
+                print_help()
+                continue
+            
+            # Check for version
+            if user_input.lower() in ['version', '--version', '-v']:
+                print("\n" + "="*60)
+                print("  SliceNet - IP Subnet Calculator")
+                print("="*60)
+                print("  Version:  1.0.0")
+                print("  Author:   SNB")
+                print("  GitHub:   https://github.com/SNB220")
+                print("  License:  MIT")
+                print("="*60 + "\n")
+                continue
+            
+            # Parse the input as command line arguments
+            # Split the input respecting quotes
+            import shlex
+            try:
+                args = shlex.split(user_input)
+            except ValueError:
+                args = user_input.split()
+            
+            # Prepend script name to make it look like sys.argv
+            sys.argv = ['slicenet.py'] + args
+            
+            # Process the command
+            process_command()
+            
+            print()  # Empty line for readability
+            
+        except KeyboardInterrupt:
+            print("\n\n⚠️  Use 'exit' or 'quit' to leave interactive mode\n")
+            continue
+        except EOFError:
+            print("\n\n👋 Thanks for using SliceNet! Goodbye.\n")
+            break
+
+
+def process_command():
+    """Process a single command (used by both CLI and interactive mode)."""
+    # Check for --batch mode
+    if '--batch' in sys.argv or '-f' in sys.argv:
+        # Batch processing mode
+        args = [arg for arg in sys.argv[1:] if arg not in ['--batch', '-f']]
+        
+        if len(args) < 1:
+            print_error_with_suggestion(
+                "Batch mode requires an input file path.",
+                ' '.join(sys.argv[1:])
+            )
+            return
+        
+        input_file = args[0]
+        output_format = args[1] if len(args) > 1 else 'txt'
+        
+        if output_format not in ['txt', 'csv', 'json']:
+            print_error_with_suggestion(
+                f"Invalid format '{output_format}'. Supported formats: txt, csv, json",
+                ' '.join(sys.argv[1:])
+            )
+            return
+        
+        BatchProcessor.process_file(input_file, output_format)
+        return
+    
+    # Check for --supernet mode
+    if '--supernet' in sys.argv or '--aggregate' in sys.argv or '-a' in sys.argv:
+        # Supernet/CIDR aggregation mode
+        args = [arg for arg in sys.argv[1:] if arg not in ['--supernet', '--aggregate', '-a']]
+        
+        if len(args) < 2:
+            print_error_with_suggestion(
+                "Supernet mode requires at least 2 networks in CIDR notation.",
+                ' '.join(sys.argv[1:])
+            )
+            return
+        
+        calculator = SupernetCalculator(args)
+        output = calculator.format_output()
+        print(output)
+        
+        # Prompt to save
+        ExportManager.prompt_save(output, "supernet")
+        return
+    
+    # Check for --range mode
+    if '--range' in sys.argv or '-r' in sys.argv:
+        # Range to CIDR mode
+        args = [arg for arg in sys.argv[1:] if arg not in ['--range', '-r']]
+        
+        if len(args) < 2:
+            print_error_with_suggestion(
+                "Range mode requires both START_IP and END_IP.",
+                ' '.join(sys.argv[1:])
+            )
+            return
+        
+        start_ip = args[0]
+        end_ip = args[1]
+        
+        converter = IPRangeToCIDR(start_ip, end_ip)
+        output = converter.format_output()
+        print(output)
+        
+        # Prompt to save
+        ExportManager.prompt_save(output, "range")
+        return
+    
+    # Normal subnet calculation mode
+    ip_address, subnet_mask, show_binary, show_subnets, ipv6 = parse_arguments(sys.argv)
+    
+    # Check if subnet mask is None (IP analysis mode)
+    if subnet_mask is None:
+        # IP Analysis mode - no subnet mask provided
+        analyzer = IPAnalyzer(ip_address)
+        output = analyzer.analyze()
+        print(output)
+        
+        # Prompt to save
+        analysis_type = "ipv6_analysis" if ipv6 else "ipv4_analysis"
+        ExportManager.prompt_save(output, analysis_type)
+        return
+    
+    if ipv6:
+        # Handle IPv6
+        # Extract prefix
+        if subnet_mask.startswith('/'):
+            prefix = int(subnet_mask[1:])
+        else:
+            prefix = int(subnet_mask)
+        
+        calculator = IPv6Calculator(ip_address, prefix, show_binary, show_subnets)
+        output = calculator.format_output()
+        print(output)
+        
+        # Prompt to save
+        ExportManager.prompt_save(output, "ipv6")
+    else:
+        # Handle IPv4
+        calculator = SubnetCalculator(ip_address, subnet_mask, show_binary, show_subnets)
+        output = calculator.format_output()
+        print(output)
+        
+        # Prompt to save
+        ExportManager.prompt_save(output, "ipv4")
+
+
 def main():
     """Main entry point."""
     try:
@@ -2332,114 +2501,17 @@ def main():
             print_help()
             sys.exit(0)
         
-        # Show banner for interactive use (not for --help or --version)
+        # Check if no arguments provided - enter interactive mode
+        if len(sys.argv) == 1:
+            print_banner()
+            interactive_mode()
+            sys.exit(0)
+        
+        # Show banner for CLI commands
         print_banner()
         
-        # Check for --batch mode
-        if '--batch' in sys.argv or '-f' in sys.argv:
-            # Batch processing mode
-            args = [arg for arg in sys.argv[1:] if arg not in ['--batch', '-f']]
-            
-            if len(args) < 1:
-                print_error_with_suggestion(
-                    "Batch mode requires an input file path.",
-                    ' '.join(sys.argv[1:])
-                )
-                sys.exit(1)
-            
-            input_file = args[0]
-            output_format = args[1] if len(args) > 1 else 'txt'
-            
-            if output_format not in ['txt', 'csv', 'json']:
-                print_error_with_suggestion(
-                    f"Invalid format '{output_format}'. Supported formats: txt, csv, json",
-                    ' '.join(sys.argv[1:])
-                )
-                sys.exit(1)
-            
-            BatchProcessor.process_file(input_file, output_format)
-            return
-        
-        # Check for --supernet mode
-        if '--supernet' in sys.argv or '--aggregate' in sys.argv or '-a' in sys.argv:
-            # Supernet/CIDR aggregation mode
-            args = [arg for arg in sys.argv[1:] if arg not in ['--supernet', '--aggregate', '-a']]
-            
-            if len(args) < 2:
-                print_error_with_suggestion(
-                    "Supernet mode requires at least 2 networks in CIDR notation.",
-                    ' '.join(sys.argv[1:])
-                )
-                sys.exit(1)
-            
-            calculator = SupernetCalculator(args)
-            output = calculator.format_output()
-            print(output)
-            
-            # Prompt to save
-            ExportManager.prompt_save(output, "supernet")
-            return
-        
-        # Check for --range mode
-        if '--range' in sys.argv or '-r' in sys.argv:
-            # Range to CIDR mode
-            args = [arg for arg in sys.argv[1:] if arg not in ['--range', '-r']]
-            
-            if len(args) < 2:
-                print_error_with_suggestion(
-                    "Range mode requires both START_IP and END_IP.",
-                    ' '.join(sys.argv[1:])
-                )
-                sys.exit(1)
-            
-            start_ip = args[0]
-            end_ip = args[1]
-            
-            converter = IPRangeToCIDR(start_ip, end_ip)
-            output = converter.format_output()
-            print(output)
-            
-            # Prompt to save
-            ExportManager.prompt_save(output, "range")
-            return
-        
-        # Normal subnet calculation mode
-        ip_address, subnet_mask, show_binary, show_subnets, ipv6 = parse_arguments(sys.argv)
-        
-        # Check if subnet mask is None (IP analysis mode)
-        if subnet_mask is None:
-            # IP Analysis mode - no subnet mask provided
-            analyzer = IPAnalyzer(ip_address)
-            output = analyzer.analyze()
-            print(output)
-            
-            # Prompt to save
-            analysis_type = "ipv6_analysis" if ipv6 else "ipv4_analysis"
-            ExportManager.prompt_save(output, analysis_type)
-            return
-        
-        if ipv6:
-            # Handle IPv6
-            # Extract prefix
-            if subnet_mask.startswith('/'):
-                prefix = int(subnet_mask[1:])
-            else:
-                prefix = int(subnet_mask)
-            
-            calculator = IPv6Calculator(ip_address, prefix, show_binary, show_subnets)
-            output = calculator.format_output()
-            print(output)
-            
-            # Prompt to save
-            ExportManager.prompt_save(output, "ipv6")
-        else:
-            # Handle IPv4
-            calculator = SubnetCalculator(ip_address, subnet_mask, show_binary, show_subnets)
-            output = calculator.format_output()
-            print(output)
-            
-            # Prompt to save
-            ExportManager.prompt_save(output, "ipv4")
+        # Process the command
+        process_command()
         
     except ValueError as e:
         error_msg = str(e)
