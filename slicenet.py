@@ -418,6 +418,236 @@ class IPv6Calculator:
         return '\n'.join(output)
 
 
+class IPAnalyzer:
+    """Analyze an IP address without subnet mask to show possible information."""
+    
+    def __init__(self, ip: str):
+        """Initialize with IP address only."""
+        self.ip_str = ip
+        self.is_ipv6_addr = self._detect_ipv6(ip)
+    
+    def _detect_ipv6(self, ip: str) -> bool:
+        """Detect if IP is IPv6."""
+        return ':' in ip
+    
+    def analyze(self) -> str:
+        """Analyze the IP and return possible information."""
+        if self.is_ipv6_addr:
+            return self._analyze_ipv6()
+        else:
+            return self._analyze_ipv4()
+    
+    def _analyze_ipv4(self) -> str:
+        """Analyze IPv4 address."""
+        output = []
+        output.append("\n" + "="*70)
+        output.append("SliceNet - IP ADDRESS ANALYSIS")
+        output.append("="*70)
+        output.append(f"IP Address: {self.ip_str}")
+        output.append("")
+        
+        try:
+            # Parse IP
+            octets = self.ip_str.split('.')
+            if len(octets) != 4:
+                raise ValueError("Invalid IPv4 format")
+            
+            ip_int = 0
+            for octet in octets:
+                octet_int = int(octet)
+                if not (0 <= octet_int <= 255):
+                    raise ValueError(f"Invalid octet value: {octet}")
+                ip_int = (ip_int << 8) | octet_int
+            
+            first_octet = int(octets[0])
+            
+            # IP Class
+            if first_octet <= 127:
+                ip_class = "A"
+                classful_mask = "255.0.0.0 (/8)"
+                default_cidr = 8
+            elif first_octet <= 191:
+                ip_class = "B"
+                classful_mask = "255.255.0.0 (/16)"
+                default_cidr = 16
+            elif first_octet <= 223:
+                ip_class = "C"
+                classful_mask = "255.255.255.0 (/24)"
+                default_cidr = 24
+            elif first_octet <= 239:
+                ip_class = "D (Multicast)"
+                classful_mask = "N/A (Multicast)"
+                default_cidr = None
+            else:
+                ip_class = "E (Reserved)"
+                classful_mask = "N/A (Reserved)"
+                default_cidr = None
+            
+            output.append(f"IP Class: {ip_class}")
+            
+            # IP Type (Private/Public/Special)
+            ip_type = self._get_ip_type(ip_int, first_octet)
+            output.append(f"IP Type: {ip_type}")
+            output.append("")
+            
+            # Classful information
+            if default_cidr:
+                output.append("CLASSFUL NETWORK INFORMATION:")
+                output.append("-" * 70)
+                output.append(f"Default Subnet Mask: {classful_mask}")
+                
+                # Calculate classful network
+                mask_int = (0xFFFFFFFF << (32 - default_cidr)) & 0xFFFFFFFF
+                network_int = ip_int & mask_int
+                broadcast_int = network_int | (~mask_int & 0xFFFFFFFF)
+                
+                network_addr = self._int_to_ip(network_int)
+                broadcast_addr = self._int_to_ip(broadcast_int)
+                first_host = self._int_to_ip(network_int + 1)
+                last_host = self._int_to_ip(broadcast_int - 1)
+                total_hosts = 2 ** (32 - default_cidr)
+                usable_hosts = total_hosts - 2 if total_hosts > 2 else total_hosts
+                
+                output.append(f"Network Address: {network_addr}")
+                output.append(f"First Host: {first_host}")
+                output.append(f"Last Host: {last_host}")
+                output.append(f"Broadcast Address: {broadcast_addr}")
+                output.append(f"Total Hosts: {total_hosts:,}")
+                output.append(f"Usable Hosts: {usable_hosts:,}")
+                output.append("")
+            
+            # Common subnet suggestions
+            output.append("COMMON SUBNET MASK POSSIBILITIES:")
+            output.append("-" * 70)
+            
+            suggestions = []
+            if ip_class == "A":
+                suggestions = [8, 16, 24]
+            elif ip_class == "B":
+                suggestions = [16, 24, 25]
+            elif ip_class == "C":
+                suggestions = [24, 25, 26, 27, 28, 29, 30]
+            
+            if suggestions:
+                for cidr in suggestions:
+                    mask_int = (0xFFFFFFFF << (32 - cidr)) & 0xFFFFFFFF
+                    mask_decimal = self._int_to_ip(mask_int)
+                    network_int = ip_int & mask_int
+                    network_addr = self._int_to_ip(network_int)
+                    total_hosts = 2 ** (32 - cidr)
+                    usable = total_hosts - 2 if total_hosts > 2 else total_hosts
+                    
+                    output.append(f"  /{cidr:<3} ({mask_decimal:<16}) → {network_addr:<16} ({usable:>8,} usable hosts)")
+            
+            output.append("")
+            output.append("💡 TIP: Run with subnet mask for detailed calculation:")
+            output.append(f"   python slicenet.py {self.ip_str}/<CIDR>")
+            output.append(f"   python slicenet.py {self.ip_str} <SUBNET_MASK>")
+            
+        except ValueError as e:
+            output.append(f"Error: {str(e)}")
+        
+        output.append("="*70)
+        output.append("")
+        output.append("SliceNet 🌐 — Cut through networks with precision.")
+        output.append("Made with ❤️ by SNB | https://github.com/SNB220")
+        output.append("")
+        
+        return '\n'.join(output)
+    
+    def _analyze_ipv6(self) -> str:
+        """Analyze IPv6 address."""
+        output = []
+        output.append("\n" + "="*70)
+        output.append("SliceNet - IPv6 ADDRESS ANALYSIS")
+        output.append("="*70)
+        output.append(f"IPv6 Address: {self.ip_str}")
+        output.append("")
+        
+        try:
+            # Basic IPv6 type detection
+            addr_lower = self.ip_str.lower()
+            
+            if addr_lower == "::1":
+                ipv6_type = "Loopback (::1)"
+            elif addr_lower.startswith("fe80:"):
+                ipv6_type = "Link-Local (fe80::/10)"
+            elif addr_lower.startswith("fc") or addr_lower.startswith("fd"):
+                ipv6_type = "Unique Local Address (fc00::/7)"
+            elif addr_lower.startswith("ff"):
+                ipv6_type = "Multicast (ff00::/8)"
+            elif addr_lower.startswith("2001:db8"):
+                ipv6_type = "Documentation (2001:db8::/32)"
+            elif addr_lower.startswith("2") or addr_lower.startswith("3"):
+                ipv6_type = "Global Unicast (2000::/3)"
+            else:
+                ipv6_type = "Unknown/Special"
+            
+            output.append(f"Address Type: {ipv6_type}")
+            output.append("")
+            
+            # Common IPv6 prefix suggestions
+            output.append("COMMON IPv6 PREFIX POSSIBILITIES:")
+            output.append("-" * 70)
+            output.append(f"  /128 → Single host address")
+            output.append(f"  /64  → Standard LAN segment (18.4 quintillion addresses)")
+            output.append(f"  /56  → Residential allocation (256 /64 subnets)")
+            output.append(f"  /48  → Enterprise/site allocation (65,536 /64 subnets)")
+            output.append(f"  /32  → ISP allocation (4.3 billion /64 subnets)")
+            output.append("")
+            
+            output.append("💡 TIP: Run with prefix length for detailed calculation:")
+            output.append(f"   python slicenet.py {self.ip_str}/<PREFIX>")
+            
+        except Exception as e:
+            output.append(f"Error: {str(e)}")
+        
+        output.append("="*70)
+        output.append("")
+        output.append("SliceNet 🌐 — Cut through networks with precision.")
+        output.append("Made with ❤️ by SNB | https://github.com/SNB220")
+        output.append("")
+        
+        return '\n'.join(output)
+    
+    def _get_ip_type(self, ip_int: int, first_octet: int) -> str:
+        """Determine IP type (Private, Public, Special)."""
+        # Private ranges
+        if 0x0A000000 <= ip_int <= 0x0AFFFFFF:  # 10.0.0.0/8
+            return "Private (RFC 1918: 10.0.0.0/8)"
+        elif 0xAC100000 <= ip_int <= 0xAC1FFFFF:  # 172.16.0.0/12
+            return "Private (RFC 1918: 172.16.0.0/12)"
+        elif 0xC0A80000 <= ip_int <= 0xC0A8FFFF:  # 192.168.0.0/16
+            return "Private (RFC 1918: 192.168.0.0/16)"
+        
+        # Loopback
+        elif 0x7F000000 <= ip_int <= 0x7FFFFFFF:  # 127.0.0.0/8
+            return "Loopback (127.0.0.0/8)"
+        
+        # Link-Local
+        elif 0xA9FE0000 <= ip_int <= 0xA9FEFFFF:  # 169.254.0.0/16
+            return "Link-Local (APIPA: 169.254.0.0/16)"
+        
+        # Multicast
+        elif first_octet >= 224 and first_octet <= 239:
+            return "Multicast (224.0.0.0/4)"
+        
+        # Reserved
+        elif first_octet >= 240:
+            return "Reserved (240.0.0.0/4)"
+        
+        # CGNAT
+        elif 0x64400000 <= ip_int <= 0x647FFFFF:  # 100.64.0.0/10
+            return "Shared Address Space (CGNAT: 100.64.0.0/10)"
+        
+        else:
+            return "Public"
+    
+    def _int_to_ip(self, ip_int: int) -> str:
+        """Convert integer to IP address string."""
+        return f"{(ip_int >> 24) & 0xFF}.{(ip_int >> 16) & 0xFF}.{(ip_int >> 8) & 0xFF}.{ip_int & 0xFF}"
+
+
 class SubnetCalculator:
     """Handles IP subnet calculations and conversions."""
     
@@ -1659,9 +1889,9 @@ def parse_arguments(args: list) -> Tuple[str, str, bool, Optional[int], bool]:
         ip_address = args_clean[1]
         subnet_mask = args_clean[2]
     else:
-        print("Error: Subnet mask/prefix not provided")
-        print_usage()
-        sys.exit(1)
+        # No subnet mask provided - return special flag
+        ip_address = args_clean[1]
+        subnet_mask = None  # Special flag for IP analysis mode
     
     # Detect IPv6
     ipv6 = is_ipv6(ip_address)
@@ -2041,6 +2271,14 @@ def main():
         
         # Normal subnet calculation mode
         ip_address, subnet_mask, show_binary, show_subnets, ipv6 = parse_arguments(sys.argv)
+        
+        # Check if subnet mask is None (IP analysis mode)
+        if subnet_mask is None:
+            # IP Analysis mode - no subnet mask provided
+            analyzer = IPAnalyzer(ip_address)
+            output = analyzer.analyze()
+            print(output)
+            return
         
         if ipv6:
             # Handle IPv6
