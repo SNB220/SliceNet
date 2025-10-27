@@ -1938,6 +1938,132 @@ IPv6 Examples:
     python slicenet.py 2001:0db8:85a3:0000:0000:8a2e:0370:7334/48
     python slicenet.py fe80::1/10 --binary
     python slicenet.py ::1/128
+"""
+    print(usage)
+
+
+def print_error_with_suggestion(error_msg: str, user_input: str = None):
+    """
+    Print error message with helpful suggestion and example.
+    
+    Args:
+        error_msg: The error message to display
+        user_input: The user's input that caused the error (optional)
+    """
+    print("\n" + "="*70)
+    print("❌ ERROR")
+    print("="*70)
+    print(f"\n{error_msg}\n")
+    
+    # Provide context-specific suggestions
+    suggestion = None
+    example = None
+    
+    error_lower = error_msg.lower()
+    
+    # Detect error type and provide appropriate suggestion
+    if "invalid ip" in error_lower or "invalid ipv4" in error_lower:
+        suggestion = "IPv4 addresses must have 4 octets (0-255) separated by dots."
+        example = "python slicenet.py 192.168.1.100/24"
+    
+    elif "invalid ipv6" in error_lower:
+        suggestion = "IPv6 addresses use hexadecimal groups separated by colons."
+        example = "python slicenet.py 2001:db8::1/64"
+    
+    elif "invalid cidr" in error_lower or "invalid prefix" in error_lower:
+        if "ipv6" in error_lower or "/128" in error_msg:
+            suggestion = "IPv6 prefix must be between /0 and /128."
+            example = "python slicenet.py 2001:db8::1/64"
+        else:
+            suggestion = "IPv4 CIDR must be between /0 and /32."
+            example = "python slicenet.py 192.168.1.0/24"
+    
+    elif "invalid subnet mask" in error_lower:
+        suggestion = "Subnet mask must be in decimal (e.g., 255.255.255.0) or CIDR (e.g., /24)."
+        example = "python slicenet.py 192.168.1.0 255.255.255.0"
+    
+    elif "invalid octet" in error_lower or "256" in error_msg:
+        suggestion = "Each IPv4 octet must be between 0 and 255."
+        example = "python slicenet.py 192.168.1.100/24"
+    
+    elif "range" in error_lower and ("requires" in error_lower or "start" in error_lower or "end" in error_lower):
+        suggestion = "Range mode needs both START_IP and END_IP."
+        example = "python slicenet.py --range 192.168.1.10 192.168.1.50"
+    
+    elif "supernet" in error_lower and "requires" in error_lower:
+        suggestion = "Supernet mode needs at least 2 networks in CIDR notation."
+        example = "python slicenet.py --supernet 192.168.1.0/24 192.168.2.0/24"
+    
+    elif "batch" in error_lower and ("requires" in error_lower or "file" in error_lower):
+        suggestion = "Batch mode needs an input file path."
+        example = "python slicenet.py --batch ips.txt"
+    
+    elif "invalid format" in error_lower and ("txt" in error_lower or "csv" in error_lower or "json" in error_lower):
+        suggestion = "Batch export format must be: txt, csv, or json"
+        example = "python slicenet.py --batch ips.txt json"
+    
+    elif "target" in error_lower and "must be larger" in error_lower:
+        suggestion = "When subdividing subnets, the target CIDR must be larger than current."
+        example = "python slicenet.py 192.168.1.0/24 --subnets 26"
+    
+    else:
+        # Generic suggestion
+        suggestion = "Please check your input format."
+        example = "python slicenet.py 192.168.1.0/24"
+    
+    # Print suggestion and example
+    if suggestion:
+        print(f"💡 SUGGESTION:")
+        print(f"   {suggestion}\n")
+    
+    if example:
+        print(f"📝 EXAMPLE:")
+        print(f"   {example}\n")
+    
+    print("📖 For complete usage guide, run:")
+    print("   python slicenet.py --help\n")
+    print("="*70 + "\n")
+
+
+def print_usage():
+    """Print usage instructions."""
+    usage = """
+Usage:
+    python slicenet.py <IP_ADDRESS> <SUBNET_MASK> [OPTIONS]
+    python slicenet.py <IP_ADDRESS>/<CIDR> [OPTIONS]
+    python slicenet.py <IPv6_ADDRESS>/<PREFIX> [OPTIONS]
+    python slicenet.py --range <START_IP> <END_IP>
+    python slicenet.py --supernet <NETWORK1> <NETWORK2> [NETWORK3 ...]
+
+Arguments:
+    IP_ADDRESS      IPv4 address (e.g., 192.168.1.100)
+    IPv6_ADDRESS    IPv6 address (e.g., 2001:db8::1 or 2001:0db8:0000:0000:0000:0000:0000:0001)
+    SUBNET_MASK     Subnet mask in decimal (e.g., 255.255.255.0) or CIDR (e.g., 24 or /24)
+    CIDR/PREFIX     CIDR notation for IPv4 (e.g., /24) or prefix for IPv6 (e.g., /64)
+
+Options:
+    --binary, -b                  Show binary representation and explain bitwise operations
+    --subnets <CIDR/PREFIX>, -s   Generate table of all subnets of given size (IPv4 and IPv6)
+    --range, -r                   Convert IP range to CIDR notation(s)
+    --supernet, --aggregate, -a   Calculate supernet/aggregate CIDR for multiple networks
+    --batch <FILE> [FORMAT], -f   Process multiple IPs from file (format: txt, csv, json)
+    --help, -h                    Show this help message
+
+Note: After each calculation, you'll be prompted to save results (Y/N) in TXT/CSV/JSON format.
+
+IPv4 Examples:
+    python slicenet.py 145.71.55.1/18
+    python slicenet.py 145.71.64.0 255.255.255.128
+    python slicenet.py 192.168.1.100/24 --binary
+    python slicenet.py 10.0.0.50 255.255.0.0 -b
+    python slicenet.py 192.168.1.0/24 --subnets 26
+    python slicenet.py 10.0.0.0/16 -s 24
+
+IPv6 Examples:
+    python slicenet.py 2001:db8::1/64
+    python slicenet.py 2001:0db8:85a3:0000:0000:8a2e:0370:7334/48
+    python slicenet.py fe80::1/10 --binary
+    python slicenet.py ::1/128
     python slicenet.py 2001:db8::/32 --subnets 48
     python slicenet.py 2001:db8:abcd::/48 -s 64
 
@@ -2215,16 +2341,20 @@ def main():
             args = [arg for arg in sys.argv[1:] if arg not in ['--batch', '-f']]
             
             if len(args) < 1:
-                print("\nError: --batch requires an input file\n")
-                print("Example: python slicenet.py --batch ips.txt\n")
-                print("Optional: python slicenet.py --batch ips.txt json\n")
+                print_error_with_suggestion(
+                    "Batch mode requires an input file path.",
+                    ' '.join(sys.argv[1:])
+                )
                 sys.exit(1)
             
             input_file = args[0]
             output_format = args[1] if len(args) > 1 else 'txt'
             
             if output_format not in ['txt', 'csv', 'json']:
-                print(f"\nError: Invalid format '{output_format}'. Use txt, csv, or json\n")
+                print_error_with_suggestion(
+                    f"Invalid format '{output_format}'. Supported formats: txt, csv, json",
+                    ' '.join(sys.argv[1:])
+                )
                 sys.exit(1)
             
             BatchProcessor.process_file(input_file, output_format)
@@ -2236,8 +2366,10 @@ def main():
             args = [arg for arg in sys.argv[1:] if arg not in ['--supernet', '--aggregate', '-a']]
             
             if len(args) < 2:
-                print("\nError: --supernet requires at least 2 networks in CIDR notation\n")
-                print("Example: python slicenet.py --supernet 192.168.0.0/24 192.168.1.0/24\n")
+                print_error_with_suggestion(
+                    "Supernet mode requires at least 2 networks in CIDR notation.",
+                    ' '.join(sys.argv[1:])
+                )
                 sys.exit(1)
             
             calculator = SupernetCalculator(args)
@@ -2254,8 +2386,10 @@ def main():
             args = [arg for arg in sys.argv[1:] if arg not in ['--range', '-r']]
             
             if len(args) < 2:
-                print("\nError: --range requires START_IP and END_IP\n")
-                print_usage()
+                print_error_with_suggestion(
+                    "Range mode requires both START_IP and END_IP.",
+                    ' '.join(sys.argv[1:])
+                )
                 sys.exit(1)
             
             start_ip = args[0]
@@ -2304,11 +2438,16 @@ def main():
             ExportManager.prompt_save(output, "ipv4")
         
     except ValueError as e:
-        print(f"\nError: {e}\n")
-        print_usage()
+        error_msg = str(e)
+        user_input = ' '.join(sys.argv[1:]) if len(sys.argv) > 1 else None
+        print_error_with_suggestion(error_msg, user_input)
         sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Operation cancelled by user.\n")
+        sys.exit(0)
     except Exception as e:
-        print(f"\nUnexpected error: {e}\n")
+        print(f"\n❌ Unexpected error: {e}\n")
+        print("📖 For help, run: python slicenet.py --help\n")
         sys.exit(1)
 
 
